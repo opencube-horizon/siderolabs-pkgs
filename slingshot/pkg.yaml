@@ -1,0 +1,66 @@
+name: slingshot-pkg
+variant: scratch
+shell: /bin/bash
+dependencies:
+  - stage: base
+  - stage: kernel-build
+steps:
+  - env:
+      ARCH: {{ if eq .ARCH "aarch64"}}arm64{{ else if eq .ARCH "x86_64" }}x86_64{{ else }}unsupported{{ end }}
+    prepare:
+      - |
+        for f in /pkg/tarballs/*.tar.gz ; do
+            tar -xf "${f}"
+        done
+
+        # disable installing git hooks since we are not working on a git checkout
+        sed -i -e 's|: setup|:|' slingshot_base_link/Makefile
+        # fix missing-prototypes errors
+        sed -i -e '/sbl_constants.h/a#include "sbl_internal.h"' slingshot_base_link/sbl_misc.c
+        sed -i -e '/sbl_constants.h/a#include "sbl_test.h"' slingshot_base_link/sbl_test.c
+        sed -i -z -e 's|\(bool\nis_pcie_serdes_pcs_addr\)|static \1|' slingshot_base_link/sbl_sbm_serdes_iface.c
+        sed -i -e 's|\(bool sbl_pml_recovery_ignore_down_origin_fault\)|static \1|' slingshot_base_link/sbl_pml.c
+        sed -i -e 's|\(int sbl_get_serdes_tuning_params\)|static \1|' slingshot_base_link/sbl_serdes_fn.c
+
+        # properly prepare sl
+        cp sl-driver/common/configs/config.mak.cassini sl-driver/config.mak
+        sed -i \
+            -e 's|\(-Werror\)|\1 -Wno-unused-function|' \
+            -e 's|KNL_REL        ?=.*|KNL_REL        := $(KERNELVERSION)|' \
+            sl-driver/knl/{,test/}Makefile
+        #sed -i -e 's|\(int sl_core_hw_serdes_core_sbus_reset\)|static \1|' sl-driver/knl/core/hw/sl_core_hw_serdes_core.c
+        sed -i -e 's|\(int sl_link_down_cause_map_masked_str\)|static \1|' sl-driver/knl/sl_link.c
+        sed -i \
+            -e 's|\(const char \*sl_lgrp_config_opt_str\)|static \1|' \
+            -e '/EXPORT_SYMBOL(sl_lgrp_config_opt_str)/d' \
+            sl-driver/knl/sl_lgrp.c
+
+        sed -i -e '/<sys\/errno.h/d' \
+            cxi-driver/ucxi/test_ucxi.c
+    build:
+      - |
+        make -j $(nproc) -C slingshot_base_link KDIR=/src SBL_EXTERNAL_BUILD=1 PLATFORM_CASSINI_HW=1 STAGING_DIR="${PWD}/slingshot_base_link/staging_dir" NO_BUILD_TESTS=1 stage_install
+        make -j $(nproc) -C sl-driver KDIR=/src STAGING_DIR="${PWD}/sl-driver/staging_dir" NO_BUILD_TESTS=1 stage_install
+        make -j $(nproc) -C cxi-driver KDIR=/src NO_BUILD_TESTS=1
+
+    install:
+      - |
+        mkdir -p /rootfs/usr/lib/modules/$(cat /src/include/config/kernel.release)/
+
+        cp /src/modules.order /rootfs/usr/lib/modules/$(cat /src/include/config/kernel.release)/
+        cp /src/modules.builtin /rootfs/usr/lib/modules/$(cat /src/include/config/kernel.release)/
+        cp /src/modules.builtin.modinfo /rootfs/usr/lib/modules/$(cat /src/include/config/kernel.release)/
+
+        make -C /src M="${PWD}/slingshot_base_link" modules_install DESTDIR="/rootfs" INSTALL_MOD_PATH=/rootfs/usr INSTALL_MOD_DIR=extras INSTALL_MOD_STRIP=1 CONFIG_MODULE_SIG_ALL=Y
+        make -C /src M="${PWD}/sl-driver/knl" modules_install DESTDIR="/rootfs" INSTALL_MOD_PATH=/rootfs/usr INSTALL_MOD_DIR=extras INSTALL_MOD_STRIP=1 CONFIG_MODULE_SIG_ALL=Y
+        make -C /src M="${PWD}/cxi-driver/cxi" modules_install DESTDIR="/rootfs" INSTALL_MOD_PATH=/rootfs/usr INSTALL_MOD_DIR=extras INSTALL_MOD_STRIP=1 CONFIG_MODULE_SIG_ALL=Y
+
+        find /rootfs
+    test:
+      - |
+        find /rootfs/usr/lib/modules -name '*.ko' -exec grep -FL '~Module signature appended~' {} \+
+      - |
+        fhs-validator /rootfs
+finalize:
+  - from: /rootfs
+    to: /
