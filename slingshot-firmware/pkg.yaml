@@ -1,0 +1,17 @@
+name: slingshot-firmware-pkg
+variant: scratch
+shell: /bin/bash
+dependencies:
+    - stage: base
+steps:
+  - install:
+      - |
+        mkdir -p /rootfs/usr/lib/firmware/
+        cp -v /pkg/blobs/sbus_master.*.bin /pkg/blobs/serdes.*.bin /rootfs/usr/lib/firmware/
+    test:
+      - |
+        fhs-validator /rootfs
+
+finalize:
+  - from: /rootfs
+    to: /
