@@ -1,8 +1,37 @@
-diff --git a/drivers/net/ethernet/hpe/ss1/cass_core.h b/drivers/net/ethernet/hpe/ss1/cass_core.h
-index ee3e378..6da806b 100644
 --- a/drivers/net/ethernet/hpe/ss1/cass_core.h
 +++ b/drivers/net/ethernet/hpe/ss1/cass_core.h
-@@ -223,7 +223,8 @@ static inline void pci_disable_pcie_error_reporting(void *p) {}
+@@ -19,6 +19,30 @@
+ #include <linux/completion.h>
+ #include <linux/hrtimer.h>
+ #include <linux/hwmon.h>
++#include <linux/idr.h>
++
++/*
++ * Compat: ida_simple_get/ida_simple_remove removed in Linux 6.4.
++ * Provide inline wrappers mapping to the current ida_alloc API.
++ */
++#if LINUX_VERSION_CODE >= KERNEL_VERSION(6, 4, 0)
++#ifndef ida_simple_get
++static inline int __cxi_ida_simple_get(struct ida *ida, unsigned int start,
++				       unsigned int end, gfp_t gfp)
++{
++	if (end == 0)
++		return ida_alloc_min(ida, start, gfp);
++	return ida_alloc_range(ida, start, end - 1, gfp);
++}
++#define ida_simple_get __cxi_ida_simple_get
++
++static inline void __cxi_ida_simple_remove(struct ida *ida, unsigned int id)
++{
++	ida_free(ida, id);
++}
++#define ida_simple_remove __cxi_ida_simple_remove
++#endif
++#endif
+ #include <linux/socket.h>
+ 
+ #include "cxi_link.h"
+@@ -223,7 +247,8 @@ static inline void pci_disable_pcie_error_reporting(void *p) {}
  #define CTS_AVAIL (C_NUM_CTS - 1) /* CT 0 invalid */
  #define EQS_AVAIL (C_NUM_EQS - 1) /* EQ 0 invalid */
  
@@ -12,8 +41,6 @@ index ee3e378..6da806b 100644
  
  /* Current devices have up to 31 sensors */
  #define CASS_MAX_SENSORS 32
-diff --git a/drivers/net/ethernet/hpe/ss1/cass_dma_buf.c b/drivers/net/ethernet/hpe/ss1/cass_dma_buf.c
-index d22bd65..0d91808 100644
 --- a/drivers/net/ethernet/hpe/ss1/cass_dma_buf.c
 +++ b/drivers/net/ethernet/hpe/ss1/cass_dma_buf.c
 @@ -4,7 +4,7 @@
@@ -25,8 +52,6 @@ index d22bd65..0d91808 100644
  #endif
  
  /* This macro is needed for dma-buf.h but is defined is such a way that it is
-diff --git a/drivers/net/ethernet/hpe/ss1/cass_irq.c b/drivers/net/ethernet/hpe/ss1/cass_irq.c
-index c8ccd89..eb30d62 100644
 --- a/drivers/net/ethernet/hpe/ss1/cass_irq.c
 +++ b/drivers/net/ethernet/hpe/ss1/cass_irq.c
 @@ -126,7 +126,7 @@ void cass_comp_irq_detach(struct cass_dev *hw, struct cass_irq *irq,

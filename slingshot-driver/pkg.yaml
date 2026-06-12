@@ -4,6 +4,7 @@ shell: /bin/bash
 dependencies:
   - stage: base
   - stage: kernel-build
+  - image: "{{ .LLVM_IMAGE }}:{{ .TOOLS_REV }}"
 steps:
   - sources:
       - url: {{ if .slingshot_cassini_headers_ref }}https://github.com/HewlettPackard/shs-cassini-headers/archive/{{ .slingshot_cassini_headers_ref }}.tar.gz{{ else }}https://github.com/HewlettPackard/shs-cassini-headers/archive/refs/tags/release/shs-{{ .slingshot_version }}.tar.gz{{ end }}
@@ -33,6 +34,7 @@ steps:
 
   - env:
       ARCH: {{ if eq .ARCH "aarch64"}}arm64{{ else if eq .ARCH "x86_64" }}x86_64{{ else }}unsupported{{ end }}
+      LLVM: 1
     prepare:
       - |
         for f in *.tar.gz ; do
@@ -47,28 +49,35 @@ steps:
         # disable installing git hooks since we are not working on a git checkout
         sed -i -e 's|: setup|:|' slingshot_base_link/Makefile
 
-        patch -d slingshot_base_link -p1 < /pkg/patches/0001-slingshot_base_link-fix-prototypes.patch
-        patch -d slingshot_base_link -p1 < /pkg/patches/0002-slingshot_base_link-add-pcie-functiondclarations.patch
-        patch -d slingshot_base_link -p1 < /pkg/patches/0100-sbl-kernel-timer-update.patch
-        patch -d sl-driver -p1 < /pkg/patches/0101-sl-kernel-timer-update.patch
-        patch -d cxi-driver -p1 < /pkg/patches/0102-cxi-kernel-update.patch
-        patch -d kfabric -p1 < /pkg/patches/0103-kfabric-kernel-update.patch
-        
+        # apply slingshot_base_link patches
+        cd slingshot_base_link
+        patch -p1 < /pkg/patches/0003-slingshot_base_link-fix-clang-fallthrough.patch
+        patch -p1 < /pkg/patches/0100-sbl-kernel-timer-update.patch
+        cd ..
+
+        # apply sl-driver patches
+        cd sl-driver
+        patch -p1 < /pkg/patches/0101-sl-kernel-timer-update.patch
+        cd ..
+
+        # apply cxi-driver patches
+        cd cxi-driver
+        patch -p1 < /pkg/patches/0102-cxi-kernel-update.patch
+        cd ..
+
+        # apply kfabric patches
+        cd kfabric
+        patch -p1 < /pkg/patches/0103-kfabric-kernel-update.patch
+        patch -p1 < /pkg/patches/0104-kfabric-fix-parallel-build.patch
+        cd ..
+
         # properly prepare sl
         cp sl-driver/common/configs/config.mak.cassini sl-driver/config.mak
-
-        # symlink directories to ensure cxi-driver finds its header files
-        mkdir firmware_cassini/lib
-        ln -sf ../include firmware_cassini/lib/casuc
-        ln -sf ../include firmware_cassini/lib/craypldm
-
-        sed -i -e '/<sys\/errno.h/d' \
-            cxi-driver/ucxi/test_ucxi.c
     build:
       - |
         make -j $(nproc) -C slingshot_base_link KDIR=/src SBL_EXTERNAL_BUILD=1 PLATFORM_CASSINI_HW=1 STAGING_DIR="${PWD}/slingshot_base_link/staging_dir" NO_BUILD_TESTS=1 stage_install
         make -j $(nproc) -C sl-driver KDIR=/src STAGING_DIR="${PWD}/sl-driver/staging_dir" NO_BUILD_TESTS=1 stage_install ARCH="${ARCH}"
-        make -j $(nproc) -C cxi-driver KDIR=/src NO_BUILD_TESTS=1
+        make -j $(nproc) -C cxi-driver KDIR=/src NO_BUILD_TESTS=1 SUBDIRS="drivers/net/ethernet/hpe/ss1"
         make -j $(nproc) -C kfabric KDIR=/src NO_BUILD_TESTS=1
 
     install:
@@ -80,7 +89,7 @@ steps:
         cp /src/modules.builtin.modinfo /rootfs/usr/lib/modules/$(cat /src/include/config/kernel.release)/
 
         make -C /src M="${PWD}/slingshot_base_link" modules_install DESTDIR="/rootfs" INSTALL_MOD_PATH=/rootfs/usr INSTALL_MOD_DIR=extras INSTALL_MOD_STRIP=1 CONFIG_MODULE_SIG_ALL=Y
-        make -C /src M="${PWD}/sl-driver/knl" modules_install DESTDIR="/rootfs" INSTALL_MOD_PATH=/rootfs/usr INSTALL_MOD_DIR=extras INSTALL_MOD_STRIP=1 CONFIG_MODULE_SIG_ALL=Y
+        make -C /src M="${PWD}/sl-driver/drivers/net/ethernet/hpe/sl" modules_install DESTDIR="/rootfs" INSTALL_MOD_PATH=/rootfs/usr INSTALL_MOD_DIR=extras INSTALL_MOD_STRIP=1 CONFIG_MODULE_SIG_ALL=Y
         make -C /src M="${PWD}/cxi-driver/drivers/net/ethernet/hpe/ss1" modules_install DESTDIR="/rootfs" INSTALL_MOD_PATH=/rootfs/usr INSTALL_MOD_DIR=extras INSTALL_MOD_STRIP=1 CONFIG_MODULE_SIG_ALL=Y
         make -C /src M="${PWD}/kfabric" modules_install DESTDIR="/rootfs" INSTALL_MOD_PATH=/rootfs/usr INSTALL_MOD_DIR=extras INSTALL_MOD_STRIP=1 CONFIG_MODULE_SIG_ALL=Y
 

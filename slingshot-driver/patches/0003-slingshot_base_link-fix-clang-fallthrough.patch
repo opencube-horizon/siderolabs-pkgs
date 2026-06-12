@@ -1,0 +1,10 @@
+--- a/sbl_serdes_fn.c
++++ b/sbl_serdes_fn.c
+@@ -4284,7 +4284,7 @@
+ 				goto out;
+ 			}
+-			// drop through
++			fallthrough;
+ 
+ 		case -ETIME:    // tuning did not complete
+ 		case -ECHRNG:   // eye heights bad

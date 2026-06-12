@@ -254,22 +254,19 @@ vars:
   runc_sha512: 54b2254ccac5d17139cfec7419e3282cd51aa10b5c699a59feb85800c3dc58a79a300e824b5b811cac6d19ec25ba1abf34231d931c240685be4c41dfbe781fd5
 
   # renovate: datasource=git-tags extractVersion=^release/shs-(?<version>.*)$ depName=https://github.com/HewlettPackard/shs-cassini-headers.git
-  slingshot_version: 13.0.0
-  slingshot_cassini_headers_ref:     4d2c6845ae99f70ebc4b96e6a82b20989cc6bfaf
-  slingshot_cassini_headers_sha256:  3db56d078e1bb09c71a728b01fe8808e08ad0619481043061fbcb73440e29429
-  slingshot_cassini_headers_sha512:  c7f463641fcf42b499b8fb70ffcb325ecf5dcf5de9b11e61a0e310bdadd85f6af274a22bce61c3fbf81980dabd16d57c4e949bb5b6cb16df186ff561cdd586fc
-  slingshot_cxi_driver_sha256:       9274644ac45036afd438feffd6b44429fdb4f818a685ba6a8aa576e5c9029b3f
-  slingshot_cxi_driver_sha512:       9f8109b84ca08cf456b9ad2f8c01ab6ec3b98cf6970250bd5f1c5cd9af412756e6b16a8ba4aaeab56c5b5c6342fa96b0748d98fd626d7ae829ba6313c4a7ddc3
-  slingshot_firmware_cassini_ref:    756565798aa61f114bb1c2c9af342931711e5a5e
-  slingshot_firmware_cassini_sha256: cc5ad9f59680304cc79fedf71d7743cebfb026c7c0d3b9a9362965db99f9d028
-  slingshot_firmware_cassini_sha512: fd37979b34f7fad318ab9c0736207aa03ad79e84282d06302a93de16b0132fbedd77af8baa2c23c21b579119c10c4ba17281c11e3c30bb7904a55841cfb5dbfc
-  slingshot_sl_driver_sha256:        add9f2b25ea1dfb4550b522c0b6a65699d785132cc8e22be456c23cb75f29560
-  slingshot_sl_driver_sha512:        abe8c9ee0e1ce70725953caa034f918a1658e69b3800f0ade4b52b98faf730b44fc46d665ee1617782c9b1a8d9f689181e52b589b6bd003becddda8772e6644f
-  slingshot_base_link_ref:           538440ae544553b7eac272dc7442fbd0c076ab6e
-  slingshot_base_link_sha256:        70d8de1d662aecea8332fb7d894a3ab8e4c58d2b5fb272454aadf536f96e5d8d
-  slingshot_base_link_sha512:        5ab0af5c321cde38b2a772ce740adb35f72feb829cf090f49cd9105f4b165a0167945454feb2a60bd7fd1cdffc1feec3f3c6b6dea95f466a65e1a7bacd478d2d
-  slingshot_kfabric_sha256:          f41d8e0d62c3bd0417c2251560b4adee23309a9207bacc8cbd9568b46bbe03fa
-  slingshot_kfabric_sha512:          abc13f8812ba1f8e85ad7c7c70f4db155bd32795726c583d26fcb74f82e0ba146cf84105e877928c2dbe7412ad07412ace6ebe8121beaaf24b08cecfeb24e524
+  slingshot_version: 14.0.0
+  slingshot_firmware_cassini_sha256: ac94b214a30862241b46c90eaf204e95f8b586aaaa2f20a8223b970cde386780
+  slingshot_firmware_cassini_sha512: 227a2962cbf3c9d66c5de1e1c7599048ccdad2fe9e9e449fd1d14e2994b397307822cc2707519158369bf3af2703bd5190b75fe53b16f2eedf0a9c2a9c3666c7
+  slingshot_base_link_sha256:        881d08aa60c052326f1774b23e560e07714e1517131f05f11c872808303f8715
+  slingshot_base_link_sha512:        610499e63d507a2b03eb64190a011377cf9be34c89fd01bdbce62a2de5e87dc6db76c16d2aa55b3b35587775ee759644c4256ef4b7c51bebc73298ef315c0708
+  slingshot_cassini_headers_sha256:  0ae45ae995eadc8aefeeeec59c24984909fe0325b97449f8522a3ff32557672f
+  slingshot_cassini_headers_sha512:  0177db0a2c94a9a5acdc1ce7aa3f499a65c9098ea4f77e8272f16db5de79957eada2606e83159c96be1d29c0185a39a6f56bc4de9f5f9d46a3ef1b4cb787feec
+  slingshot_sl_driver_sha256:        9b7dd31eff80986d624a457d75b837c115fa3859da3e9fe5f6d0aff3ab408607
+  slingshot_sl_driver_sha512:        38e67086dd31816d9880f25ecc18637e9d06453a3526e5469c6d3b304358cab053de895244d0de108e639dbb7c808b6820e986771b893ccb3e86ade9a6d17a22
+  slingshot_cxi_driver_sha256:       f6f9c4484381bcf0db8af159992038aa10ab718dae63b9781ace479de96a0bed
+  slingshot_cxi_driver_sha512:       6f33b5dac79beb9068c2e0521bf3b06cb1e822e7e45e8386e440a47f4bdf763a1f5837df102b416256961f98b8a1793419869243532417747267b78e7aafbee4
+  slingshot_kfabric_sha256:          4ad7dc21ccf133cc42143c97b0bc462aa4cd11b3617fee60b5f290bad25d2b9a
+  slingshot_kfabric_sha512:          7748b212c2013cafd8ede72548e91718cc67284bbd8729ea2a5dfbb18afa196e7c2bbcd090f605653ef20c1bf744b3a0374ab8d1afd8fa82e6e4a2386c0ce111
 
   # renovate: datasource=git-tags extractVersion=^tag-(?<version>.*)$ depName=git://repo.or.cz/socat.git
   socat_version: 1.8.1.1

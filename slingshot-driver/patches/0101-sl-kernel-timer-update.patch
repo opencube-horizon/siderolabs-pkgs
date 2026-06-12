@@ -1,8 +1,7 @@
-diff --git a/knl/core/base/sl_core_timer_link.c b/knl/core/base/sl_core_timer_link.c
-index 9fa93a4..8119eb6 100644
---- a/knl/core/base/sl_core_timer_link.c
-+++ b/knl/core/base/sl_core_timer_link.c
-@@ -81,7 +81,7 @@ void sl_core_timer_link_timeout(struct timer_list *timer)
+diff --git a/drivers/net/ethernet/hpe/sl/core/base/sl_core_timer_link.c b/drivers/net/ethernet/hpe/sl/core/base/sl_core_timer_link.c
+--- a/drivers/net/ethernet/hpe/sl/core/base/sl_core_timer_link.c
++++ b/drivers/net/ethernet/hpe/sl/core/base/sl_core_timer_link.c
+@@ -90,7 +90,7 @@ void sl_core_timer_link_timeout(struct timer_list *timer)
  	struct sl_core_timer_link_info *info;
  	struct sl_core_link            *core_link;
  
@@ -11,18 +10,17 @@ index 9fa93a4..8119eb6 100644
  	core_link = info->data.link;
  
  	sl_core_log_dbg(core_link, LOG_NAME,
-@@ -97,5 +97,5 @@ void sl_core_timer_link_end(struct sl_core_link *core_link, u32 timer_num)
+@@ -106,5 +106,5 @@ void sl_core_timer_link_end(struct sl_core_link *core_link, u32 timer_num)
  		"end %s (core_link = 0x%p, timer_num = %u)",
  		core_link->timers[timer_num].data.log, core_link, timer_num);
  
 -	del_timer_sync(&(core_link->timers[timer_num].timer));
 +	timer_delete_sync(&(core_link->timers[timer_num].timer));
  }
-diff --git a/knl/core/base/sl_core_timer_llr.c b/knl/core/base/sl_core_timer_llr.c
-index b9298cb..a095a2f 100644
---- a/knl/core/base/sl_core_timer_llr.c
-+++ b/knl/core/base/sl_core_timer_llr.c
-@@ -64,7 +64,7 @@ void sl_core_timer_llr_timeout(struct timer_list *timer)
+diff --git a/drivers/net/ethernet/hpe/sl/core/base/sl_core_timer_llr.c b/drivers/net/ethernet/hpe/sl/core/base/sl_core_timer_llr.c
+--- a/drivers/net/ethernet/hpe/sl/core/base/sl_core_timer_llr.c
++++ b/drivers/net/ethernet/hpe/sl/core/base/sl_core_timer_llr.c
+@@ -63,7 +63,7 @@ void sl_core_timer_llr_timeout(struct timer_list *timer)
  	struct sl_core_timer_llr_info *info;
  	struct sl_core_llr            *core_llr;
  
@@ -31,32 +29,41 @@ index b9298cb..a095a2f 100644
  	core_llr = info->data.core_llr;
  
  	sl_core_log_dbg(core_llr, LOG_NAME,
-@@ -81,5 +81,5 @@ void sl_core_timer_llr_end(struct sl_core_llr *core_llr, u32 timer_num)
+@@ -80,5 +80,5 @@ void sl_core_timer_llr_end(struct sl_core_llr *core_llr, u32 timer_num)
  		"end %s (core_llr = 0x%p, timer_num = %u)",
  		core_llr->timers[timer_num].data.log, core_llr, timer_num);
  
 -	del_timer_sync(&(core_llr->timers[timer_num].timer));
 +	timer_delete_sync(&(core_llr->timers[timer_num].timer));
  }
-diff --git a/knl/ctl/sl_ctl_link_fec_priv.c b/knl/ctl/sl_ctl_link_fec_priv.c
-index b2685b4..c0970e1 100644
---- a/knl/ctl/sl_ctl_link_fec_priv.c
-+++ b/knl/ctl/sl_ctl_link_fec_priv.c
-@@ -489,7 +489,7 @@ void sl_ctl_link_fec_mon_timer(struct timer_list *timer)
+diff --git a/drivers/net/ethernet/hpe/sl/ctrl/sl_ctrl_link_fec_priv.c b/drivers/net/ethernet/hpe/sl/ctrl/sl_ctrl_link_fec_priv.c
+--- a/drivers/net/ethernet/hpe/sl/ctrl/sl_ctrl_link_fec_priv.c
++++ b/drivers/net/ethernet/hpe/sl/ctrl/sl_ctrl_link_fec_priv.c
+@@ -447,7 +447,7 @@ void sl_ctrl_link_fec_mon_timer(struct timer_list *timer)
  {
- 	struct sl_ctl_link *ctl_link;
+ 	struct sl_ctrl_link *ctrl_link;
  
--	ctl_link = from_timer(ctl_link, timer, fec_mon_timer);
-+	ctl_link = timer_container_of(ctl_link, timer, fec_mon_timer);
+-	ctrl_link = from_timer(ctrl_link, timer, fec_mon_timer);
++	ctrl_link = timer_container_of(ctrl_link, timer, fec_mon_timer);
  
- 	sl_ctl_log_dbg(ctl_link, LOG_NAME, "monitor timer");
+ 	sl_ctrl_log_dbg(ctrl_link, LOG_NAME, "monitor timer");
  
-@@ -513,7 +513,7 @@ void sl_ctl_link_fec_mon_stop(struct sl_ctl_link *ctl_link)
+@@ -472,7 +472,7 @@ void sl_ctrl_link_fec_mon_stop(struct sl_ctrl_link *ctrl_link)
  		return;
  	}
  
--	del_timer_sync(&ctl_link->fec_mon_timer);
-+	timer_delete_sync(&ctl_link->fec_mon_timer);
+-	del_timer_sync(&ctrl_link->fec_mon_timer);
++	timer_delete_sync(&ctrl_link->fec_mon_timer);
  }
  
- #define SL_CTL_LINK_FEC_LIMIT_25   25781250000ULL
+ #define SL_CTRL_LINK_FEC_LIMIT_25   25781250000ULL
+diff --git a/drivers/net/ethernet/hpe/sl/core/sl_core_link.c b/drivers/net/ethernet/hpe/sl/core/sl_core_link.c
+--- a/drivers/net/ethernet/hpe/sl/core/sl_core_link.c
++++ b/drivers/net/ethernet/hpe/sl/core/sl_core_link.c
+@@ -253,7 +253,7 @@ int sl_core_info_map_get(u8 ldev_num, u8 lgrp_num, u8 link_num, u64 *info_map)
+ {
+-	int                  rtn;
++	int                  rtn = 0;
+ 	struct sl_core_link *core_link;
+ 	struct sl_core_mac  *core_mac;
+ 	struct sl_core_llr  *core_llr;
