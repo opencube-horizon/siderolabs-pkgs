@@ -93,6 +93,11 @@ steps:
         make -C /src M="${PWD}/cxi-driver/drivers/net/ethernet/hpe/ss1" modules_install DESTDIR="/rootfs" INSTALL_MOD_PATH=/rootfs/usr INSTALL_MOD_DIR=extras INSTALL_MOD_STRIP=1 CONFIG_MODULE_SIG_ALL=Y
         make -C /src M="${PWD}/kfabric" modules_install DESTDIR="/rootfs" INSTALL_MOD_PATH=/rootfs/usr INSTALL_MOD_DIR=extras INSTALL_MOD_STRIP=1 CONFIG_MODULE_SIG_ALL=Y
 
+        # udev: rename CXI/Slingshot PCI net interfaces to hsnN
+        install -d /rootfs/usr/lib/udev/rules.d /rootfs/usr/lib/udev
+        CGO_ENABLED=0 GOARCH=${ARCH/x86_64/amd64} go build -o /rootfs/usr/lib/udev/cxi-hsn-rename /pkg/udev/cxi-hsn-rename.go
+        install -m 644 /pkg/udev/90-slingshot-network.rules /rootfs/usr/lib/udev/rules.d/
+
         find /rootfs
 
     test:

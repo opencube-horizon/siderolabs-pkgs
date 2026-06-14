@@ -1,0 +1,1 @@
+ACTION=="add", SUBSYSTEM=="net", SUBSYSTEMS=="pci", DRIVERS=="?*", PROGRAM="/usr/lib/udev/cxi-hsn-rename $kernel", NAME="$result"
